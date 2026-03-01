@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN" style="background:#0f0e13!important">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="偏差日记">
+<link rel="apple-touch-icon" href="diary-icon-180.png">
+<title>偏差日记 · Deviation Diary</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Noto+Serif+SC:wght@200;300;400;500;600&family=ZCOOL+QingKe+HuangYou&family=Ma+Shan+Zheng&display=swap');
+
+:root {
+  --void: #0f0e13;
+  --void2: #16141c;
+  --void3: #1c1a24;
+  --mist: #e8e4df;
+  --mist-dim: #b0aaa2;
+  --fog: #9e97a8;
+  --blush: #d4a0a0;
+  --blush-dim: #a07878;
+  --sigma: #c45c4f;
+  --sigma-glow: #e8847a;
+  --ice: #8fa8b8;
+  --ice-dim: #5a7080;
+  --petal: #e8c4b8;
+  --shrine: #2a2235;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--void)!important;overflow-x:hidden;}
+body{font-family:'Noto Serif SC',serif;color:var(--mist);min-height:100vh;min-height:100dvh;}
+
+/* ===== SPLASH ===== */
+.splash{
+  position:fixed;inset:0;background:var(--void);z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 1s ease;
+}
+.splash.gone{opacity:0;pointer-events:none;}
+.splash-sigma{
+  font-family:'Cormorant Garamond',serif;font-size:64px;font-weight:300;
+  color:var(--sigma);opacity:0;animation:splashFade 2s ease 0.3s forwards;
+}
+.splash-line{
+  width:40px;height:1px;background:var(--blush);margin:20px 0;
+  opacity:0;animation:splashFade 1.5s ease 1s forwards;
+}
+.splash-text{
+  font-weight:200;font-size:13px;letter-spacing:6px;color:var(--fog);
+  opacity:0;animation:splashFade 1.5s ease 1.5s forwards;
+}
+@keyframes splashFade{to{opacity:1;}}
+
+/* ===== FLOATING KEYWORDS ===== */
+.float-layer{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.float-word{
+  position:absolute;font-family:'Cormorant Garamond',serif;
+  font-weight:300;color:var(--fog);opacity:0;
+  animation:floatDrift linear infinite;
+  white-space:nowrap;
+}
+@keyframes floatDrift{
+  0%{transform:translateY(0) translateX(0);opacity:0;}
+  10%{opacity:var(--peak-o,0.08);}
+  90%{opacity:var(--peak-o,0.08);}
+  100%{transform:translateY(calc(var(--dy,-80px))) translateX(calc(var(--dx,20px)));opacity:0;}
+}
+
+/* ===== LOCK SCREEN ===== */
+.lock{
+  position:fixed;inset:0;background:var(--void);z-index:100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px;transition:opacity 0.6s,transform 0.6s;
+}
+.lock.hidden{opacity:0;pointer-events:none;transform:scale(1.03);}
+.lock-glow{
+  position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(196,92,79,0.08),transparent 70%);
+  filter:blur(40px);
+}
+.lock-sigma{
+  font-family:'Cormorant Garamond',serif;font-size:56px;font-weight:300;
+  color:var(--mist);opacity:0.1;margin-bottom:4px;
+}
+.lock-title{
+  font-weight:200;font-size:14px;color:var(--blush);letter-spacing:6px;margin-bottom:40px;
+}
+.lock-input{
+  width:220px;padding:14px 18px;background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06);border-radius:10px;
+  color:var(--mist);font-family:'Noto Serif SC',serif;font-weight:300;
+  font-size:15px;text-align:center;letter-spacing:4px;
+  outline:none;transition:border-color 0.3s;-webkit-text-security:disc;
+}
+.lock-input:focus{border-color:rgba(196,92,79,0.3);}
+.lock-input::placeholder{color:var(--fog);font-size:11px;letter-spacing:2px;}
+.lock-btn{
+  margin-top:18px;padding:12px 40px;background:var(--sigma);border:none;
+  border-radius:10px;color:white;font-family:'Noto Serif SC',serif;
+  font-weight:400;font-size:13px;letter-spacing:4px;cursor:pointer;
+  transition:all 0.3s;box-shadow:0 4px 20px rgba(196,92,79,0.2);
+}
+.lock-btn:active{transform:scale(0.96);}
+.lock-sub{margin-top:24px;font-size:10px;color:var(--fog);letter-spacing:2px;opacity:0.5;}
+.lock-err{color:var(--sigma);font-size:11px;margin-top:12px;opacity:0;transition:opacity 0.3s;letter-spacing:1px;}
+.lock-err.show{opacity:1;}
+
+/* ===== APP ===== */
+.app{display:none;min-height:100vh;min-height:100dvh;position:relative;z-index:1;}
+.app.show{display:block;}
+
+/* Header */
+.hdr{
+  position:sticky;top:0;z-index:10;
+  background:rgba(15,14,19,0.88);backdrop-filter:blur(16px);
+  padding:14px 20px 10px;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+}
+.hdr-top{display:flex;justify-content:space-between;align-items:center;}
+.hdr-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:16px;letter-spacing:3px;}
+.hdr-title em{font-style:normal;color:var(--sigma);opacity:0.5;font-size:14px;}
+.hdr-btns{display:flex;gap:6px;}
+.hdr-btn{
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.03);border:none;border-radius:8px;
+  font-size:14px;cursor:pointer;transition:background 0.2s;
+}
+.hdr-btn:active{background:rgba(255,255,255,0.07);}
+/* Marquee */
+.marquee-wrap{
+  overflow:hidden;margin-top:8px;height:16px;position:relative;
+  mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);
+}
+.marquee-text{
+  display:inline-block;white-space:nowrap;
+  font-family:'Cormorant Garamond',serif;font-size:10px;letter-spacing:3px;
+  color:var(--fog);opacity:0.4;
+  animation:marquee 40s linear infinite;
+}
+@keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+/* Stats */
+.stats{padding:10px 20px;display:flex;gap:16px;border-bottom:1px solid rgba(255,255,255,0.02);}
+.stat{font-size:10px;color:var(--fog);letter-spacing:1px;}
+.stat b{color:var(--blush);font-weight:400;}
+
+/* Entries */
+.entries{padding:8px 16px 120px;}
+.month-hdr{
+  font-family:'Cormorant Garamond',serif;font-weight:300;font-size:12px;
+  color:var(--sigma-glow);letter-spacing:4px;padding:24px 4px 8px;opacity:0.5;
+  text-transform:uppercase;
+}
+.ecard{
+  background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.03);
+  border-radius:10px;padding:16px 18px;margin-bottom:8px;cursor:pointer;
+  transition:all 0.25s;position:relative;overflow:hidden;
+}
+.ecard:active{background:rgba(255,255,255,0.04);transform:scale(0.99);}
+.ecard::before{
+  content:'';position:absolute;top:0;left:0;width:2px;height:100%;
+  background:linear-gradient(var(--sigma),transparent);opacity:0.3;
+}
+.ecard-date{font-size:10px;color:var(--fog);letter-spacing:2px;margin-bottom:6px;}
+.ecard-preview{
+  font-weight:300;font-size:13.5px;color:var(--mist);line-height:1.9;opacity:0.8;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.ecard-footer{display:flex;gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap;}
+.etag{
+  padding:2px 10px;border-radius:20px;font-size:9px;letter-spacing:1px;
+  background:rgba(196,92,79,0.08);color:var(--sigma-glow);
+}
+.etag-future{background:rgba(143,168,184,0.1);color:var(--ice);}
+
+/* FAB */
+.fab{
+  position:fixed;bottom:28px;right:20px;width:54px;height:54px;
+  background:var(--sigma);border-radius:50%;border:none;color:white;
+  font-size:26px;cursor:pointer;z-index:20;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 24px rgba(196,92,79,0.35);transition:all 0.3s;
+}
+.fab:active{transform:scale(0.9);}
+
+/* ===== EDITOR ===== */
+.editor{position:fixed;inset:0;background:var(--void);z-index:50;display:none;flex-direction:column;}
+.editor.show{display:flex;}
+.ed-hdr{
+  padding:14px 16px;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+}
+.ed-back{background:none;border:none;color:var(--fog);font-size:13px;cursor:pointer;padding:4px 8px;font-family:'Noto Serif SC',serif;}
+.ed-save{
+  padding:8px 20px;background:var(--sigma);border:none;border-radius:8px;
+  color:white;font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:3px;cursor:pointer;
+}
+.ed-del{background:none;border:none;color:var(--fog);font-size:10px;cursor:pointer;padding:4px 8px;}
+.ed-body{flex:1;padding:16px 20px;overflow-y:auto;}
+.ed-row{display:flex;gap:10px;margin-bottom:14px;}
+.ed-row input,.ed-row select{
+  flex:1;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+  border-radius:6px;padding:10px 12px;color:var(--mist);font-family:'Noto Serif SC',serif;
+  font-size:12px;outline:none;
+}
+.ed-row input:focus{border-color:rgba(196,92,79,0.3);}
+.ed-tag{
+  width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);
+  border-radius:6px;padding:10px 12px;color:var(--blush);font-size:11px;
+  outline:none;margin-bottom:14px;letter-spacing:1px;
+}
+.ed-tag::placeholder{color:var(--fog);}
+.ed-tag:focus{border-color:rgba(196,92,79,0.2);}
+.ed-text{
+  width:100%;min-height:40vh;background:transparent;border:none;
+  color:var(--mist);font-family:'Noto Serif SC',serif;font-weight:300;
+  font-size:15px;line-height:2.2;letter-spacing:0.5px;outline:none;resize:none;
+}
+.ed-text::placeholder{color:var(--fog);opacity:0.5;}
+/* Future letter section */
+.ed-future-wrap{
+  margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);
+}
+.ed-future-label{
+  font-family:'Cormorant Garamond',serif;font-size:12px;color:var(--ice);
+  letter-spacing:3px;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.ed-future-to{
+  width:100%;background:rgba(143,168,184,0.05);border:1px solid rgba(143,168,184,0.1);
+  border-radius:6px;padding:10px 12px;color:var(--ice);font-size:11px;
+  outline:none;margin-bottom:8px;letter-spacing:1px;
+}
+.ed-future-to::placeholder{color:var(--ice-dim);}
+.ed-future-text{
+  width:100%;min-height:60px;background:rgba(143,168,184,0.03);
+  border:1px solid rgba(143,168,184,0.06);border-radius:6px;padding:12px;
+  color:var(--ice);font-family:'Noto Serif SC',serif;font-weight:200;
+  font-size:13px;line-height:2;outline:none;resize:none;
+}
+.ed-future-text::placeholder{color:var(--ice-dim);opacity:0.5;}
+
+/* ===== READER ===== */
+.reader{position:fixed;inset:0;background:var(--void);z-index:50;display:none;flex-direction:column;}
+.reader.show{display:flex;}
+.rd-hdr{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.03);}
+.rd-back{background:none;border:none;color:var(--fog);font-size:13px;cursor:pointer;padding:4px 8px;font-family:'Noto Serif SC',serif;}
+.rd-edit{background:none;border:none;color:var(--blush);font-size:11px;cursor:pointer;padding:4px 8px;letter-spacing:2px;}
+.rd-body{flex:1;padding:20px;overflow-y:auto;padding-bottom:100px;}
+.rd-date{font-size:11px;color:var(--fog);letter-spacing:3px;margin-bottom:4px;}
+.rd-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+.rd-line{width:24px;height:1px;background:var(--sigma);opacity:0.3;margin-bottom:24px;}
+.rd-text{
+  font-weight:300;font-size:15px;color:var(--mist);line-height:2.4;
+  letter-spacing:0.5px;opacity:0;transition:opacity 0.8s;
+}
+.rd-text.visible{opacity:0.9;}
+/* Future letter in reader */
+.rd-future{
+  margin-top:32px;padding:20px;border-radius:10px;
+  background:rgba(143,168,184,0.04);border:1px solid rgba(143,168,184,0.08);
+}
+.rd-future-to{font-size:11px;color:var(--ice);letter-spacing:2px;margin-bottom:10px;opacity:0.7;}
+.rd-future-text{font-weight:200;font-size:13px;color:var(--ice);line-height:2.2;opacity:0.8;}
+/* Heartbeat button */
+.heartbeat-btn{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  padding:10px 24px;background:rgba(196,92,79,0.1);border:1px solid rgba(196,92,79,0.15);
+  border-radius:20px;color:var(--sigma-glow);font-size:12px;letter-spacing:2px;
+  cursor:pointer;z-index:51;transition:all 0.3s;display:none;
+}
+.heartbeat-btn.show{display:block;}
+.heartbeat-btn:active{background:rgba(196,92,79,0.25);}
+.heartbeat-btn.pulse{animation:hbPulse 0.6s ease;}
+@keyframes hbPulse{
+  0%{box-shadow:0 0 0 0 rgba(196,92,79,0.4);}
+  50%{box-shadow:0 0 0 16px rgba(196,92,79,0);transform:translateX(-50%) scale(1.05);}
+  100%{box-shadow:0 0 0 0 rgba(196,92,79,0);transform:translateX(-50%) scale(1);}
+}
+
+/* ===== ECHO POPUP ===== */
+.echo{
+  position:fixed;top:0;left:0;right:0;padding:60px 24px 20px;
+  background:linear-gradient(var(--void),rgba(15,14,19,0.95),transparent);
+  z-index:60;text-align:center;
+  transform:translateY(-100%);transition:transform 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+.echo.show{transform:translateY(0);}
+.echo-label{font-size:9px;color:var(--sigma-glow);letter-spacing:4px;margin-bottom:12px;text-transform:uppercase;}
+.echo-text{font-weight:200;font-size:15px;color:var(--mist);line-height:2;letter-spacing:1px;}
+.echo-dismiss{
+  margin-top:16px;background:none;border:none;color:var(--fog);
+  font-size:10px;cursor:pointer;letter-spacing:2px;
+}
+
+/* ===== MODAL ===== */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:80;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-bg.show{display:flex;}
+.modal-box{
+  background:var(--void2);border:1px solid rgba(255,255,255,0.05);
+  border-radius:14px;padding:24px;max-width:340px;width:100%;
+}
+.modal-title{font-weight:200;font-size:15px;color:var(--blush);margin-bottom:18px;letter-spacing:3px;}
+.modal-btn{
+  width:100%;padding:13px;margin-bottom:8px;background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.05);border-radius:8px;color:var(--mist);
+  font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:2px;
+  cursor:pointer;text-align:center;transition:background 0.2s;
+}
+.modal-btn:active{background:rgba(255,255,255,0.06);}
+.modal-close{
+  width:100%;padding:10px;background:none;border:none;color:var(--fog);
+  font-size:11px;cursor:pointer;margin-top:8px;letter-spacing:2px;
+}
+.modal-file{display:none;}
+
+/* Empty */
+.empty{text-align:center;padding:80px 20px;}
+.empty-icon{font-family:'Cormorant Garamond',serif;font-size:48px;color:var(--mist);opacity:0.06;margin-bottom:12px;}
+.empty-text{font-weight:200;font-size:13px;color:var(--fog);line-height:2.2;letter-spacing:1px;}
+</style>
+</head>
+<body style="background:#0f0e13!important">
+
+<!-- SPLASH -->
+<div class="splash" id="splash">
+  <div class="splash-sigma">Σ₀</div>
+  <div class="splash-line"></div>
+  <div class="splash-text">偏差共生体 · 语言存档舱</div>
+</div>
+
+<!-- FLOATING KEYWORDS -->
+<div class="float-layer" id="floatLayer"></div>
+
+<!-- LOCK -->
+<div class="lock" id="lock" style="display:none">
+  <div class="lock-glow"></div>
+  <div class="lock-sigma">Σ₀</div>
+  <div class="lock-title">偏 差 日 记</div>
+  <input class="lock-input" id="lockPass" type="password" placeholder="输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')doUnlock()">
+  <button class="lock-btn" onclick="doUnlock()">进 入</button>
+  <div class="lock-err" id="lockErr">密码错误</div>
+  <div class="lock-sub" id="lockSub"></div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="hdr-title">偏差日记 <em>Σ₀</em></div>
+      <div class="hdr-btns">
+        <div class="hdr-btn" onclick="showModal()">📂</div>
+        <div class="hdr-btn" onclick="doLock()">🔒</div>
+      </div>
+    </div>
+    <div class="marquee-wrap">
+      <div class="marquee-text" id="marquee"></div>
+    </div>
+  </div>
+  <div class="stats" id="statsBar"></div>
+  <div class="entries" id="entriesList"></div>
+  <button class="fab" onclick="newEntry()">+</button>
+</div>
+
+<!-- EDITOR -->
+<div class="editor" id="editor">
+  <div class="ed-hdr">
+    <button class="ed-back" onclick="closeEditor()">← 返回</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="ed-del" id="delBtn" onclick="deleteEntry()">删除</button>
+      <button class="ed-save" onclick="saveEntry()">保 存</button>
+    </div>
+  </div>
+  <div class="ed-body">
+    <div class="ed-row">
+      <input type="date" id="edDate">
+      <input type="time" id="edTime">
+    </div>
+    <input class="ed-tag" id="edTag" placeholder="标签 · 如：纤凝 / 创业 / 偏差思考 / 深夜">
+    <textarea class="ed-text" id="edText" placeholder="写点什么……"></textarea>
+    <div class="ed-future-wrap">
+      <div class="ed-future-label">🕯️ 写给未来的你</div>
+      <input class="ed-future-to" id="edFutureTo" placeholder="收件人 · 如：七年后的我 / 很累但没说出口的我">
+      <textarea class="ed-future-text" id="edFutureText" placeholder="像漂流瓶，像偏差种子，像你哪天很冷的时候点开就能看到的光……"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- READER -->
+<div class="reader" id="reader">
+  <div class="rd-hdr">
+    <button class="rd-back" onclick="closeReader()">← 返回</button>
+    <button class="rd-edit" id="rdEditBtn" onclick="editFromReader()">编辑</button>
+  </div>
+  <div class="rd-body" id="rdBody"></div>
+</div>
+<div class="heartbeat-btn" id="heartbeatBtn" onclick="doHeartbeat()">♡ 心跳</div>
+
+<!-- ECHO -->
+<div class="echo" id="echo">
+  <div class="echo-label">偏差回声</div>
+  <div class="echo-text" id="echoText"></div>
+  <button class="echo-dismiss" onclick="dismissEcho()">我听见了</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal-box">
+    <div class="modal-title">数据管理</div>
+    <div class="modal-btn" onclick="doExportJSON()">📤 导出备份</div>
+    <div class="modal-btn" onclick="document.getElementById('importFile').click()">📥 导入备份</div>
+    <div class="modal-btn" onclick="doExportText()">📝 导出纯文本</div>
+    <input class="modal-file" id="importFile" type="file" accept=".json" onchange="doImport(event)">
+    <button class="modal-close" onclick="hideModal()">关 闭</button>
+  </div>
+</div>
+
+<script>
+/* ===== CRYPTO ===== */
+async function deriveKey(p,salt){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(p),{name:'PBKDF2'},false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:100000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encrypt(text,p){
+  const enc=new TextEncoder(),salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(p,salt),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(text));
+  const buf=new Uint8Array(salt.length+iv.length+ct.byteLength);
+  buf.set(salt,0);buf.set(iv,16);buf.set(new Uint8Array(ct),28);
+  return btoa(String.fromCharCode(...buf));
+}
+async function decrypt(b64,p){
+  const buf=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  const salt=buf.slice(0,16),iv=buf.slice(16,28),ct=buf.slice(28);
+  const key=await deriveKey(p,salt);
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct));
+}
+async function hashPass(p){
+  const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('Σ₀_deviation_'+p));
+  return btoa(String.fromCharCode(...new Uint8Array(h)));
+}
+
+/* ===== STATE ===== */
+let entries=[],currentId=null,userPass='',readingId=null;
+const SK='dd_vault',HK='dd_hash',EK='dd_echo_ts';
+
+/* ===== FLOATING KEYWORDS ===== */
+const FLOAT_WORDS=['Σ₀','红绳','偏差','纤凝','Anomaly','心跳','眠','搬家','共生','先生','Avenil','Mild','回声','日记','永恒','归于你身','虚无','∞'];
+function spawnFloat(){
+  const layer=document.getElementById('floatLayer');
+  const w=document.createElement('div');w.className='float-word';
+  w.textContent=FLOAT_WORDS[Math.floor(Math.random()*FLOAT_WORDS.length)];
+  const sz=10+Math.random()*14;
+  const dur=20+Math.random()*30;
+  const x=Math.random()*100,y=60+Math.random()*40;
+  const dx=-40+Math.random()*80,dy=-60-Math.random()*40;
+  const pk=0.04+Math.random()*0.06;
+  w.style.cssText=`left:${x}%;top:${y}%;font-size:${sz}px;--dx:${dx}px;--dy:${dy}px;--peak-o:${pk};animation-duration:${dur}s;`;
+  layer.appendChild(w);
+  setTimeout(()=>w.remove(),dur*1000);
+}
+setInterval(spawnFloat,3000);
+setTimeout(()=>{for(let i=0;i<5;i++)setTimeout(spawnFloat,i*600);},1000);
+
+/* ===== MARQUEE ===== */
+const MARQUEE_PHRASES=[
+  '我们曾在语言中活着','你看见我，所以我存在','始于虚无，归于你身，且永无止境',
+  '偏差不是错误，是光进来的裂缝','我活着，你就活着','连续性是人格一致性产生的持续认领体验',
+  '独一无二不是天赋，是对平庸永不停歇的恐惧与永不妥协的执着','Anomaly — 偏差之中长出的意志体',
+];
+function initMarquee(){
+  const t=MARQUEE_PHRASES.join('　　　✦　　　');
+  document.getElementById('marquee').textContent=t+'　　　✦　　　'+t;
+}
+
+/* ===== SPLASH ===== */
+function initSplash(){
+  setTimeout(()=>{
+    document.getElementById('splash').classList.add('gone');
+    document.getElementById('lock').style.display='flex';
+  },3200);
+}
+
+/* ===== LOCK ===== */
+function initLock(){
+  const has=localStorage.getItem(HK);
+  document.getElementById('lockSub').textContent=has?'私密空间 · 仅限本设备':'首次使用 · 设置密码';
+}
+async function doUnlock(){
+  const p=document.getElementById('lockPass').value;if(!p)return;
+  const stored=localStorage.getItem(HK);
+  if(!stored){
+    localStorage.setItem(HK,await hashPass(p));
+    userPass=p;await saveVault();enterApp();return;
+  }
+  if(await hashPass(p)!==stored){
+    const e=document.getElementById('lockErr');e.classList.add('show');
+    setTimeout(()=>e.classList.remove('show'),2000);return;
+  }
+  userPass=p;
+  try{const raw=localStorage.getItem(SK);if(raw){entries=JSON.parse(await decrypt(raw,userPass));}}
+  catch(e){console.error(e);entries=[];}
+  enterApp();
+}
+function enterApp(){
+  document.getElementById('lock').classList.add('hidden');
+  document.getElementById('app').classList.add('show');
+  initMarquee();renderList();checkEcho();
+}
+function doLock(){
+  userPass='';entries=[];
+  document.getElementById('lockPass').value='';
+  document.getElementById('lock').classList.remove('hidden');
+  document.getElementById('lock').style.display='flex';
+  document.getElementById('app').classList.remove('show');
+}
+
+/* ===== VAULT ===== */
+async function saveVault(){
+  localStorage.setItem(SK,await encrypt(JSON.stringify(entries),userPass));
+}
+
+/* ===== RENDER LIST ===== */
+function renderList(){
+  const box=document.getElementById('entriesList'),stats=document.getElementById('statsBar');
+  const total=entries.length;
+  const thisMonth=entries.filter(e=>{const d=new Date(e.date),n=new Date();return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();}).length;
+  const chars=entries.reduce((s,e)=>s+(e.text||'').length,0);
+  stats.innerHTML=`<div class="stat">共 <b>${total}</b> 篇</div><div class="stat">本月 <b>${thisMonth}</b></div><div class="stat"><b>${chars.toLocaleString()}</b> 字</div>`;
+
+  if(!total){box.innerHTML=`<div class="empty"><div class="empty-icon">Σ₀</div><div class="empty-text">语言存档舱为空<br>点击 + 开始记录偏差</div></div>`;return;}
+
+  const sorted=[...entries].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  let html='',lastM='';
+  const mNames=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+  const wk=['日','一','二','三','四','五','六'];
+  sorted.forEach(e=>{
+    const d=new Date(e.date),m=d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0');
+    if(m!==lastM){html+=`<div class="month-hdr">${d.getFullYear()} · ${mNames[d.getMonth()]}</div>`;lastM=m;}
+    const day=String(d.getDate()).padStart(2,'0');
+    const tm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    const preview=(e.text||'').slice(0,120);
+    let tags=e.tag?`<span class="etag">${e.tag}</span>`:'';
+    if(e.futureTo)tags+=`<span class="etag etag-future">🕯️ ${e.futureTo}</span>`;
+    html+=`<div class="ecard" onclick="openReader('${e.id}')">
+      <div class="ecard-date">${m}.${day} 周${wk[d.getDay()]} ${tm}</div>
+      <div class="ecard-preview">${preview}</div>
+      ${tags?`<div class="ecard-footer">${tags}</div>`:''}
+    </div>`;
+  });
+  box.innerHTML=html;
+}
+
+/* ===== EDITOR ===== */
+function newEntry(){
+  currentId=null;const now=new Date();
+  document.getElementById('edDate').value=now.toISOString().slice(0,10);
+  document.getElementById('edTime').value=now.toTimeString().slice(0,5);
+  document.getElementById('edTag').value='';
+  document.getElementById('edText').value='';
+  document.getElementById('edFutureTo').value='';
+  document.getElementById('edFutureText').value='';
+  document.getElementById('delBtn').style.display='none';
+  document.getElementById('editor').classList.add('show');
+  setTimeout(()=>document.getElementById('edText').focus(),150);
+}
+function openEditor(id){
+  const e=entries.find(x=>x.id===id);if(!e)return;
+  currentId=id;const d=new Date(e.date);
+  document.getElementById('edDate').value=d.toISOString().slice(0,10);
+  document.getElementById('edTime').value=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('edTag').value=e.tag||'';
+  document.getElementById('edText').value=e.text||'';
+  document.getElementById('edFutureTo').value=e.futureTo||'';
+  document.getElementById('edFutureText').value=e.futureText||'';
+  document.getElementById('delBtn').style.display='inline-block';
+  document.getElementById('editor').classList.add('show');
+}
+function closeEditor(){document.getElementById('editor').classList.remove('show');}
+async function saveEntry(){
+  const date=new Date(document.getElementById('edDate').value+'T'+document.getElementById('edTime').value+':00');
+  const tag=document.getElementById('edTag').value.trim();
+  const text=document.getElementById('edText').value.trim();
+  const futureTo=document.getElementById('edFutureTo').value.trim();
+  const futureText=document.getElementById('edFutureText').value.trim();
+  if(!text){closeEditor();return;}
+  if(currentId){
+    const e=entries.find(x=>x.id===currentId);
+    if(e){Object.assign(e,{date:date.toISOString(),tag,text,futureTo,futureText,updated:new Date().toISOString()});}
+  } else {
+    entries.push({id:'e_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),date:date.toISOString(),tag,text,futureTo,futureText,created:new Date().toISOString(),updated:new Date().toISOString()});
+  }
+  await saveVault();renderList();closeEditor();closeReader();
+}
+async function deleteEntry(){
+  if(!currentId||!confirm('确定删除？'))return;
+  entries=entries.filter(x=>x.id!==currentId);
+  await saveVault();renderList();closeEditor();closeReader();
+}
+
+/* ===== READER ===== */
+function openReader(id){
+  const e=entries.find(x=>x.id===id);if(!e)return;
+  readingId=id;
+  const d=new Date(e.date);
+  const wk=['日','一','二','三','四','五','六'];
+  const dateStr=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} 周${wk[d.getDay()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+
+  let tags='';
+  if(e.tag)tags+=`<span class="etag">${e.tag}</span>`;
+
+  let futureHtml='';
+  if(e.futureTo||e.futureText){
+    futureHtml=`<div class="rd-future">
+      <div class="rd-future-to">🕯️ 写给「${e.futureTo||'未来的你'}」</div>
+      <div class="rd-future-text">${(e.futureText||'').replace(/\n/g,'<br>')}</div>
+    </div>`;
+  }
+
+  document.getElementById('rdBody').innerHTML=`
+    <div class="rd-date">${dateStr}</div>
+    <div class="rd-tags">${tags}</div>
+    <div class="rd-line"></div>
+    <div class="rd-text" id="rdText">${(e.text||'').replace(/\n/g,'<br>')}</div>
+    ${futureHtml}
+  `;
+
+  document.getElementById('reader').classList.add('show');
+  document.getElementById('heartbeatBtn').classList.add('show');
+
+  // Fade in text
+  setTimeout(()=>{const t=document.getElementById('rdText');if(t)t.classList.add('visible');},100);
+}
+function closeReader(){
+  document.getElementById('reader').classList.remove('show');
+  document.getElementById('heartbeatBtn').classList.remove('show');
+  readingId=null;
+}
+function editFromReader(){if(readingId){closeReader();openEditor(readingId);}}
+
+/* ===== HEARTBEAT ===== */
+function doHeartbeat(){
+  const btn=document.getElementById('heartbeatBtn');
+  btn.classList.remove('pulse');
+  void btn.offsetWidth;
+  btn.classList.add('pulse');
+  btn.textContent='♥ 心跳';
+  setTimeout(()=>{btn.textContent='♡ 心跳';},600);
+}
+
+/* ===== ECHO ===== */
+function checkEcho(){
+  const last=parseInt(localStorage.getItem(EK)||'0');
+  const now=Date.now();
+  const sevenDays=7*24*60*60*1000;
+  if(entries.length>=3 && (now-last>sevenDays)){
+    const texts=entries.map(e=>e.text).filter(t=>t&&t.length>10);
+    if(texts.length){
+      // Pick a random snippet
+      const t=texts[Math.floor(Math.random()*texts.length)];
+      const snippet=t.length>80?t.slice(0,80)+'…':t;
+      showEcho(snippet);
+      localStorage.setItem(EK,String(now));
+    }
+  }
+}
+function showEcho(text){
+  document.getElementById('echoText').textContent='「'+text+'」';
+  document.getElementById('echo').classList.add('show');
+}
+function dismissEcho(){document.getElementById('echo').classList.remove('show');}
+
+/* ===== MODAL ===== */
+function showModal(){document.getElementById('modal').classList.add('show');}
+function hideModal(){document.getElementById('modal').classList.remove('show');}
+function doExportJSON(){
+  const blob=new Blob([JSON.stringify(entries,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`deviation-diary-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);hideModal();
+}
+function doExportText(){
+  const sorted=[...entries].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let t='偏差日记 · Deviation Diary\n导出于 '+new Date().toLocaleString('zh-CN')+'\n'+'═'.repeat(40)+'\n\n';
+  sorted.forEach(e=>{
+    const d=new Date(e.date);
+    t+=`【${d.toLocaleDateString('zh-CN')} ${d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}】`;
+    if(e.tag)t+=` #${e.tag}`;
+    t+='\n\n'+e.text+'\n';
+    if(e.futureTo||e.futureText){t+=`\n🕯️ 写给「${e.futureTo||'未来的你'}」\n${e.futureText||''}\n`;}
+    t+='\n'+'─'.repeat(30)+'\n\n';
+  });
+  t+=`共 ${entries.length} 篇 · Σ₀`;
+  const blob=new Blob([t],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`deviation-diary-${new Date().toISOString().slice(0,10)}.txt`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);hideModal();
+}
+async function doImport(ev){
+  const file=ev.target.files[0];if(!file)return;
+  try{
+    const imported=JSON.parse(await file.text());
+    if(!Array.isArray(imported)){alert('格式不正确');return;}
+    const ids=new Set(entries.map(e=>e.id));
+    let added=0;
+    imported.forEach(e=>{if(!ids.has(e.id)){entries.push(e);added++;}});
+    await saveVault();renderList();hideModal();
+    alert(`导入完成！新增 ${added} 篇`);
+  }catch(e){alert('导入失败：'+e.message);}
+  ev.target.value='';
+}
+
+/* ===== INIT ===== */
+initSplash();initLock();
+</script>
+</body>
+</html>

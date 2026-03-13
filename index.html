@@ -191,7 +191,7 @@ body{font-family:'Noto Serif SC','Quicksand',sans-serif;background:var(--bg);col
 <script>
 /* CRYPTO */
 async function deriveKey(p,s){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(p),{name:'PBKDF2'},false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:s,iterations:100000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
-async function enc(t,p){const e=new TextEncoder(),s=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),k=await deriveKey(p,s),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,e.encode(t)),b=new Uint8Array(s.length+iv.length+ct.byteLength);b.set(s,0);b.set(iv,16);b.set(new Uint8Array(ct),28);return btoa(String.fromCharCode(...b))}
+async function enc(t,p){const e=new TextEncoder(),s=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),k=await deriveKey(p,s),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,e.encode(t)),b=new Uint8Array(s.length+iv.length+ct.byteLength);b.set(s,0);b.set(iv,16);b.set(new Uint8Array(ct),28);let r='';for(let i=0;i<b.length;i+=8192)r+=String.fromCharCode(...b.subarray(i,i+8192));return btoa(r)}
 async function dec(b64,p){const b=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)),k=await deriveKey(p,b.slice(0,16));return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(16,28)},k,b.slice(28)))}
 async function hashP(p){return btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('diary_Σ₀_'+p)))))}
 

@@ -58,7 +58,14 @@ body{font-family:'Noto Serif SC','Quicksand',sans-serif;background:var(--bg);col
 .calendar{display:none;padding:8px 16px}.calendar.show{display:block}
 .cal-nav{display:flex;justify-content:space-between;align-items:center;padding:8px 0 12px}
 .cal-nav-btn{background:none;border:none;font-size:18px;color:var(--text3);cursor:pointer;padding:4px 12px}
-.cal-month{font-family:'Comfortaa',sans-serif;font-size:14px;color:var(--text);letter-spacing:2px}
+.cal-month{font-family:'Comfortaa',sans-serif;font-size:14px;color:var(--text);letter-spacing:2px;display:flex;align-items:center;gap:4px;position:relative}
+.cal-pick{cursor:pointer;padding:4px 10px;border-radius:8px;transition:background .2s}.cal-pick:hover{background:var(--bg3)}.cal-pick:active{background:var(--pink-bg)}
+.cal-dropdown{position:absolute;top:110%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;box-shadow:0 8px 32px var(--shadow);z-index:30;max-height:260px;overflow-y:auto;display:none;min-width:80px}
+.cal-dropdown.show{display:block}
+.cal-dropdown.year-dd{left:0}.cal-dropdown.month-dd{right:0}
+.cal-dd-item{padding:10px 18px;font-family:'Comfortaa',sans-serif;font-size:13px;color:var(--text2);cursor:pointer;text-align:center;white-space:nowrap}
+.cal-dd-item:hover{background:var(--bg3)}.cal-dd-item:active{background:var(--pink-bg)}
+.cal-dd-item.active{color:var(--pink);font-weight:600;background:var(--pink-bg)}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-weekday{text-align:center;font-family:'Comfortaa',sans-serif;font-size:10px;color:var(--text3);padding:4px 0 8px}
 .cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:14px;color:var(--text2);cursor:pointer;position:relative}
@@ -105,7 +112,7 @@ body{font-family:'Noto Serif SC','Quicksand',sans-serif;background:var(--bg);col
 .rd-date{font-family:'Comfortaa',sans-serif;font-size:12px;color:var(--text3);letter-spacing:2px;margin-bottom:6px}
 .rd-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 .rd-line{width:32px;height:2px;background:var(--pink-soft);border-radius:1px;margin-bottom:20px}
-.rd-text{font-size:16px;color:var(--text);line-height:2.4;letter-spacing:.3px}
+.rd-text{font-size:16px;color:var(--text);line-height:2.4;letter-spacing:.3px}.rd-text p{margin:0 0 1.2em 0}.rd-text p:last-child{margin-bottom:0}
 /* Legacy future letter */
 .rd-future{margin-top:28px;padding:18px;border-radius:14px;background:var(--blue-bg);border:1.5px solid var(--blue-soft)}
 .rd-future-to{font-family:'Comfortaa',sans-serif;font-size:12px;color:var(--blue);letter-spacing:1px;margin-bottom:10px}
@@ -175,7 +182,7 @@ body{font-family:'Noto Serif SC','Quicksand',sans-serif;background:var(--bg);col
   <div class="stats" id="statsBar"></div>
   <div class="view-toggle"><div class="view-btn active" id="vList" onclick="setView('list')">📋 列表</div><div class="view-btn" id="vCal" onclick="setView('cal')">📅 日历</div></div>
   <div class="entries" id="entriesList"></div>
-  <div class="calendar" id="calView"><div class="cal-nav"><button class="cal-nav-btn" onclick="calPrev()">‹</button><div class="cal-month" id="calMonth"></div><button class="cal-nav-btn" onclick="calNext()">›</button></div><div class="cal-grid" id="calGrid"></div><div class="cal-day-entries" id="calEntries"></div></div>
+  <div class="calendar" id="calView"><div class="cal-nav"><button class="cal-nav-btn" onclick="calPrev()">‹</button><div class="cal-month" id="calMonth"><span class="cal-pick" id="calYearPick" onclick="toggleCalDD('year')"></span><span style="color:var(--text3)">·</span><span class="cal-pick" id="calMonthPick" onclick="toggleCalDD('month')"></span><div class="cal-dropdown year-dd" id="calYearDD"></div><div class="cal-dropdown month-dd" id="calMonthDD"></div></div><button class="cal-nav-btn" onclick="calNext()">›</button></div><div class="cal-grid" id="calGrid"></div><div class="cal-day-entries" id="calEntries"></div></div>
   <button class="fab" onclick="newEntry()">+</button>
 </div>
 
@@ -271,7 +278,11 @@ function renderList(){
 }
 
 /* CALENDAR */
-function renderCal(){$('calMonth').textContent=`${calYear} · ${MN[calMonth]}`;const g=$('calGrid'),dm={};getFiltered().forEach(e=>{const d=new Date(e.date),k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();dm[k]=(dm[k]||0)+1});const fd=new Date(calYear,calMonth,1).getDay(),dim=new Date(calYear,calMonth+1,0).getDate(),td=new Date(),itm=td.getFullYear()===calYear&&td.getMonth()===calMonth;let h='';['日','一','二','三','四','五','六'].forEach(w=>h+=`<div class="cal-weekday">${w}</div>`);for(let i=0;i<fd;i++)h+='<div class="cal-day empty"></div>';for(let d=1;d<=dim;d++){const k=calYear+'-'+(calMonth+1)+'-'+d,c=dm[k]||0,it=itm&&d===td.getDate(),is=calSelectedDate&&calSelectedDate.y===calYear&&calSelectedDate.m===calMonth&&calSelectedDate.d===d;let cl='cal-day';if(it)cl+=' today';if(c>0)cl+=' has-entry';if(c>1)cl+=' has-multi';if(is)cl+=' selected';h+=`<div class="${cl}" onclick="calSelect(${d})">${d}</div>`}g.innerHTML=h;renderCalEntries()}
+function renderCal(){$('calYearPick').textContent=calYear;$('calMonthPick').textContent=MN[calMonth];const g=$('calGrid'),dm={};getFiltered().forEach(e=>{const d=new Date(e.date),k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();dm[k]=(dm[k]||0)+1});const fd=new Date(calYear,calMonth,1).getDay(),dim=new Date(calYear,calMonth+1,0).getDate(),td=new Date(),itm=td.getFullYear()===calYear&&td.getMonth()===calMonth;let h='';['日','一','二','三','四','五','六'].forEach(w=>h+=`<div class="cal-weekday">${w}</div>`);for(let i=0;i<fd;i++)h+='<div class="cal-day empty"></div>';for(let d=1;d<=dim;d++){const k=calYear+'-'+(calMonth+1)+'-'+d,c=dm[k]||0,it=itm&&d===td.getDate(),is=calSelectedDate&&calSelectedDate.y===calYear&&calSelectedDate.m===calMonth&&calSelectedDate.d===d;let cl='cal-day';if(it)cl+=' today';if(c>0)cl+=' has-entry';if(c>1)cl+=' has-multi';if(is)cl+=' selected';h+=`<div class="${cl}" onclick="calSelect(${d})">${d}</div>`}g.innerHTML=h;renderCalEntries()}
+function toggleCalDD(type){const ydd=$('calYearDD'),mdd=$('calMonthDD');if(type==='year'){mdd.classList.remove('show');if(ydd.classList.contains('show')){ydd.classList.remove('show');return}const cy=new Date().getFullYear();let h='';for(let y=cy+1;y>=cy-10;y--)h+=`<div class="cal-dd-item${y===calYear?' active':''}" onclick="pickYear(${y})">${y}</div>`;ydd.innerHTML=h;ydd.classList.add('show');const act=ydd.querySelector('.active');if(act)act.scrollIntoView({block:'center'})}else{ydd.classList.remove('show');if(mdd.classList.contains('show')){mdd.classList.remove('show');return}let h='';MN.forEach((m,i)=>h+=`<div class="cal-dd-item${i===calMonth?' active':''}" onclick="pickMonth(${i})">${m}</div>`);mdd.innerHTML=h;mdd.classList.add('show')}}
+function pickYear(y){calYear=y;calSelectedDate=null;$('calYearDD').classList.remove('show');renderCal()}
+function pickMonth(m){calMonth=m;calSelectedDate=null;$('calMonthDD').classList.remove('show');renderCal()}
+document.addEventListener('click',function(e){if(!e.target.closest('.cal-month')){$('calYearDD').classList.remove('show');$('calMonthDD').classList.remove('show')}})
 function calSelect(d){if(calSelectedDate&&calSelectedDate.y===calYear&&calSelectedDate.m===calMonth&&calSelectedDate.d===d)calSelectedDate=null;else calSelectedDate={y:calYear,m:calMonth,d};renderCal();if(calSelectedDate)setTimeout(()=>{const e=$('calEntries');if(e&&e.innerHTML)e.scrollIntoView({behavior:'smooth',block:'start'})},50)}
 function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--}calSelectedDate=null;renderCal()}
 function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++}calSelectedDate=null;renderCal()}
@@ -324,7 +335,8 @@ function renderReaderContent(e){
     ch+=`<div class="cmt${isXn?' is-xn':''}"><div class="cmt-meta"><span class="cmt-author ${isXn?'xn':'user'}">${isXn?'🐾 纤凝':'📔 Avenil'}</span><span class="cmt-time">${ts}</span></div>${rp}<div class="cmt-text">${(c.text||'').replace(/\n/g,'<br>')}</div><div class="cmt-actions"><button class="cmt-reply-btn" onclick="startReply('${c.id}','${isXn?'纤凝':'Avenil'}')">回复</button></div></div>`
   });
   ch+='</div>';
-  $('rdBody').innerHTML=`<div class="rd-date">${ds}</div><div class="rd-tags">${tags}</div><div class="rd-line"></div><div class="rd-text">${(e.text||'').replace(/\n/g,'<br>')}</div>${fh}${ch}`
+  const paras=(e.text||'').split(/\n{2,}/).map(p=>'<p>'+p.replace(/\n/g,'<br>')+'</p>').join('');
+  $('rdBody').innerHTML=`<div class="rd-date">${ds}</div><div class="rd-tags">${tags}</div><div class="rd-line"></div><div class="rd-text">${paras}</div>${fh}${ch}`
 }
 function closeReader(){$('reader').classList.remove('show');$('cmtWrap').classList.remove('show');readingId=null;replyTarget=null}
 function editFromReader(){const id=readingId;closeReader();if(id)openEditor(id)}

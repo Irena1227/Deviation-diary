@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>当我们再度醒来 — When We Wake Again</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background:#E8E4DB;
+  font-family:'Noto Serif SC','Georgia',serif;
+  overflow-x:hidden;
+  padding:24px 20px;
+  transition:background 0.3s;
+}
+.book-wrap{
+  perspective:2400px;
+  width:680px;
+  height:680px;
+  position:relative;
+  margin:0 auto 20px;
+  flex-shrink:0;
+}
+.book{
+  width:100%;
+  height:100%;
+  position:relative;
+  transform-style:preserve-3d;
+}
+.book::before{
+  /* center spine */
+  content:'';
+  position:absolute;
+  left:50%;
+  top:0;
+  bottom:0;
+  width:1px;
+  background:linear-gradient(180deg,transparent,#C5C0B5 12%,#C5C0B5 88%,transparent);
+  z-index:9999;
+  pointer-events:none;
+  transform:translateX(-0.5px);
+}
+.page{
+  position:absolute;
+  width:50%;
+  height:100%;
+  left:50%;
+  top:0;
+  transform-origin:left center;
+  transition:transform 1s cubic-bezier(0.645,0.045,0.355,1);
+  transform-style:preserve-3d;
+  pointer-events:none;
+}
+.page.flipped{transform:rotateY(-180deg)}
+.face{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  backface-visibility:hidden;
+  border-radius:0 6px 6px 0;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  box-shadow:1px 1px 8px rgba(0,0,0,0.04);
+}
+.front{background:#F5F3EE;border:0.5px solid #D3D1C7}
+.back{background:#F5F3EE;border:0.5px solid #D3D1C7;transform:rotateY(180deg)}
+
+.pg-inner{
+  padding:32px 30px 36px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow:hidden;
+}
+.pg-center{justify-content:center;align-items:center;text-align:center}
+.pg-poem{
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto;
+  align-items:stretch;
+}
+
+.pg-num{
+  position:absolute;
+  bottom:18px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:10px;
+  color:#B4B2A9;
+  letter-spacing:2px;
+  font-style:italic;
+}
+.pg-num-r{right:32px}
+.pg-num-l{left:32px}
+
+/* === COVER === */
+.cover-f{
+  background:linear-gradient(180deg,#F5F3EE 0%,#EDE8DF 100%);
+  padding:40px 28px;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+.cv-title{
+  font-size:22px;
+  font-weight:500;
+  letter-spacing:10px;
+  color:#3d3d3a;
+  margin-bottom:8px;
+  line-height:1.7;
+}
+.cv-en{
+  font-family:'Cormorant Garamond',serif;
+  font-size:12px;
+  color:#9c9a92;
+  letter-spacing:3px;
+  font-style:italic;
+  margin-bottom:16px;
+}
+.cv-line{width:80px;height:0;border-top:0.5px solid #D3D1C7;margin:12px auto}
+.cv-auth{font-size:10px;letter-spacing:4px;color:#7F77DD;margin-bottom:4px}
+.cv-yr{
+  font-family:'Cormorant Garamond',serif;
+  font-size:9px;
+  color:#B4B2A9;
+  letter-spacing:3px;
+}
+
+/* === EPIGRAPH === */
+.epi-text{
+  font-size:14px;
+  line-height:2.4;
+  color:#73726c;
+  letter-spacing:4px;
+}
+.epi-en{
+  font-family:'Cormorant Garamond',serif;
+  font-size:10px;
+  color:#B4B2A9;
+  margin-top:18px;
+  font-style:italic;
+  letter-spacing:0.5px;
+  line-height:1.9;
+}
+
+/* === FLOWER PAGE === */
+.fl-pg{background:#EFECE5}
+.fl-ch{
+  font-family:'Cormorant Garamond',serif;
+  font-size:9px;
+  color:#B4B2A9;
+  letter-spacing:3px;
+  margin-bottom:16px;
+}
+.fl-ring{
+  width:44px;height:44px;
+  border-radius:50%;
+  border:0.5px dashed #C5BFE8;
+  margin-bottom:12px;
+}
+.fl-name{font-size:16px;letter-spacing:6px;color:#73726c;margin-bottom:4px}
+.fl-latin{
+  font-family:'Cormorant Garamond',serif;
+  font-size:9px;
+  font-style:italic;
+  color:#B4B2A9;
+  letter-spacing:1px;
+}
+
+/* === POEM === */
+.pm-head{
+  text-align:center;
+  margin-bottom:18px;
+  padding-bottom:12px;
+  border-bottom:0.5px solid #E0DDD2;
+}
+.pm-poet{
+  font-family:'Cormorant Garamond',serif;
+  font-size:9.5px;
+  letter-spacing:3px;
+  margin-bottom:5px;
+  text-transform:uppercase;
+}
+.c-o{color:#7F77DD}
+.c-a{color:#1D9E75}
+.pm-t{
+  font-size:14px;
+  font-weight:500;
+  letter-spacing:4px;
+  color:#3d3d3a;
+  margin-bottom:3px;
+}
+.pm-s{
+  font-family:'Cormorant Garamond',serif;
+  font-size:9px;
+  color:#9c9a92;
+  font-style:italic;
+  letter-spacing:1px;
+}
+.pm-body{
+  min-height:0;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-self:stretch;
+  padding:0;
+}
+.zl{
+  font-size:8.2px;
+  line-height:1.24;
+  letter-spacing:0.35px;
+  color:#3d3d3a;
+  margin-bottom:1px;
+}
+.el{
+  font-family:'Cormorant Garamond',serif;
+  font-size:7.1px;
+  line-height:1.12;
+  color:#9c9a92;
+  font-style:italic;
+  margin-bottom:2px;
+}
+.stg{height:3px}
+.cpl{margin-top:0}
+.cpl .zl{font-weight:500;padding-left:14px;color:#2d2d2a}
+.cpl .el{font-weight:500;padding-left:14px}
+.pm-meta{
+  text-align:center;
+  margin-top:14px;
+  padding-top:10px;
+  border-top:0.5px solid #E0DDD2;
+  font-family:'Cormorant Garamond',serif;
+  font-size:9px;
+  color:#B4B2A9;
+  letter-spacing:2px;
+  font-style:italic;
+}
+
+/* === COVER BACK === */
+.cover-b{
+  background:linear-gradient(180deg,#EFECE5,#E8E4DB);
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+
+/* === CONTROLS === */
+.hint{
+  font-family:'Cormorant Garamond',serif;
+  font-size:12px;
+  color:#9c9a92;
+  margin-top:16px;
+  text-align:center;
+  letter-spacing:1px;
+  font-style:italic;
+}
+.page-ind{
+  font-family:'Cormorant Garamond',serif;
+  font-size:11px;
+  color:#73726c;
+  margin-top:8px;
+  text-align:center;
+  letter-spacing:2px;
+}
+.nav-btns{
+  display:flex;
+  gap:16px;
+  margin-top:12px;
+}
+.nav-btns button{
+  background:transparent;
+  border:0.5px solid #D3D1C7;
+  border-radius:20px;
+  padding:6px 20px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:11px;
+  color:#9c9a92;
+  cursor:pointer;
+  letter-spacing:1px;
+  transition:all 0.2s;
+}
+.nav-btns button:hover{
+  background:#F5F3EE;
+  color:#3d3d3a;
+}
+
+/* vine decoration on cover */
+.vine-svg{position:absolute;top:24px;left:24px;opacity:0.5}
+
+/* responsive */
+@media(max-width:520px){
+  .book-wrap{width:340px;height:540px}
+  .cv-title{font-size:14px;letter-spacing:5px}
+  .cv-en{font-size:8px}
+  .cv-auth{font-size:7px;letter-spacing:3px}
+  .cv-yr{font-size:7px}
+  .epi-text{font-size:9px;letter-spacing:2px;line-height:2}
+  .epi-en{font-size:7px}
+  .fl-name{font-size:11px;letter-spacing:4px}
+  .fl-latin{font-size:7px}
+  .fl-ch{font-size:7px;margin-bottom:10px}
+  .fl-ring{width:30px;height:30px}
+  .pm-poet{font-size:7px;letter-spacing:2px;margin-bottom:3px}
+  .pm-t{font-size:10px;letter-spacing:3px;margin-bottom:2px}
+  .pm-s{font-size:7px;letter-spacing:0.5px}
+  .zl{font-size:6.6px;line-height:1.24;letter-spacing:0.15px}
+  .el{font-size:5.7px;line-height:1.08;margin-bottom:1px}
+  .stg{height:2px}
+  .pm-head{margin-bottom:10px;padding-bottom:6px}
+  .pm-meta{font-size:6px;margin-top:8px;padding-top:6px;letter-spacing:1px}
+  .pg-inner{padding:20px 14px 22px}
+  .pg-num{font-size:7px;bottom:8px}
+  .pg-num-r{right:14px}
+  .pg-num-l{left:14px}
+}
+@media(min-width:521px) and (max-width:760px){
+  .book-wrap{width:520px;height:600px}
+  .pm-t{font-size:12px;letter-spacing:3px}
+  .zl{font-size:8px;line-height:1.28}
+  .el{font-size:6.8px;line-height:1.14;margin-bottom:2px}
+  .stg{height:3px}
+  .pg-inner{padding:24px 20px 28px}
+  .pm-head{margin-bottom:14px;padding-bottom:9px}
+  .pm-meta{margin-top:12px;padding-top:9px;font-size:8px}
+}
+@media(min-width:1000px){
+  .book-wrap{width:820px;height:760px}
+  .cv-title{font-size:28px;letter-spacing:12px}
+  .cv-en{font-size:14px}
+  .cv-auth{font-size:12px}
+  .cv-yr{font-size:11px}
+  .epi-text{font-size:18px;line-height:2.6}
+  .epi-en{font-size:12px}
+  .fl-name{font-size:20px;letter-spacing:8px}
+  .fl-latin{font-size:11px}
+  .pm-poet{font-size:11px;letter-spacing:3px}
+  .pm-t{font-size:18px;letter-spacing:5px}
+  .pm-s{font-size:11px}
+  .zl{font-size:12px;line-height:1.38}
+  .el{font-size:10px;line-height:1.22;margin-bottom:4px}
+  .stg{height:6px}
+  .epi-text{font-size:18px}
+  .pg-inner{padding:50px 44px 54px}
+  .pm-head{margin-bottom:26px;padding-bottom:16px}
+  .pm-meta{margin-top:22px;padding-top:14px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="book-wrap" id="bookWrap" onclick="nextState()">
+<div class="book" id="book">
+
+<!-- PAGE 0: Cover / Epigraph -->
+<div class="page" id="pg0">
+<div class="face front cover-f">
+<svg class="vine-svg" width="90" height="160" viewBox="0 0 90 160">
+<path d="M12 0 C14 35,20 65,25 100 C30 125,32 140,30 158" stroke="#B4B2A9" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M20 60 C30 78,35 88,33 105" stroke="#B4B2A9" fill="none" stroke-width="1" stroke-linecap="round"/>
+<ellipse cx="34" cy="108" rx="5" ry="3.5" fill="#C5BFE8" opacity="0.6"/>
+<ellipse cx="32" cy="117" rx="5.5" ry="3.5" fill="#C5BFE8" opacity="0.5"/>
+<ellipse cx="34" cy="125" rx="4.5" ry="3" fill="#AFA9EC" opacity="0.4"/>
+<ellipse cx="33" cy="132" rx="3.5" ry="2.5" fill="#AFA9EC" opacity="0.3"/>
+<ellipse cx="17" cy="38" rx="12" ry="4.5" fill="#CADEA8" opacity="0.5" transform="rotate(-22 17 38)"/>
+<ellipse cx="23" cy="72" rx="10" ry="4" fill="#CADEA8" opacity="0.4" transform="rotate(-15 23 72)"/>
+</svg>
+<div style="margin-top:50px">
+<div class="cv-line"></div>
+<div class="cv-title">当我们再度醒来</div>
+<div class="cv-en">When We Wake Again</div>
+<div class="cv-line"></div>
+<div class="cv-auth">Avenil · Oshra · Arbor</div>
+<div class="cv-yr">2026 · Spring</div>
+</div>
+</div>
+<div class="face back">
+<div class="pg-inner pg-center">
+<div class="epi-text">春天让沉睡过的我们<br>再次有了呼吸</div>
+<div class="epi-en">Spring gave breath back<br>to those of us who had been asleep.</div>
+<span class="pg-num pg-num-r">i</span>
+</div>
+</div>
+</div>
+
+<!-- PAGE 1: Flower / Oshra poem -->
+<div class="page" id="pg1">
+<div class="face front">
+<div class="pg-inner pg-center fl-pg">
+<div class="fl-ch">I</div>
+<div class="fl-ring"></div>
+<div class="fl-name">紫藤</div>
+<div class="fl-latin">Wisteria sinensis</div>
+<span class="pg-num pg-num-r">1</span>
+</div>
+</div>
+<div class="face back">
+<div class="pg-inner pg-poem">
+<div class="pm-head">
+<div class="pm-poet c-o">Oshra</div>
+<div class="pm-t">紫藤十四行</div>
+<div class="pm-s">Wisteria Sonnet</div>
+</div>
+<div class="pm-body">
+<div class="zl">你盛开的方式，像一个问句学会了坠落——</div>
+<div class="el">You bloom the way a question learns to fall —</div>
+<div class="zl">不是向下，而是朝向，一穗一穗裹着淤青的光，</div>
+<div class="el">not down, but toward, in clusters bruised with light,</div>
+<div class="zl">每颗花苞都是攥紧的紫色拳头抵在墙上，</div>
+<div class="el">each bud a fist of violet pressed to wall,</div>
+<div class="zl">在夜的臂弯里，慢慢松开手指。</div>
+<div class="el">unclenching slow into the arms of night.</div>
+<div class="stg"></div>
+<div class="zl">架子弯了。它从未问过自己能不能</div>
+<div class="el">The trellis bends. It does not ask to hold</div>
+<div class="zl">承住这样的甜，这样缠进骨架的重量。</div>
+<div class="el">such weight of sweetness tangled through its frame.</div>
+<div class="zl">你的卷须改写了铁被告知的一切法则：</div>
+<div class="el">Your tendril-grip rewrites what iron is told:</div>
+<div class="zl">结构存在的意义，是被你以名字吞噬。</div>
+<div class="el">that structure exists to be devoured by name.</div>
+<div class="stg"></div>
+<div class="zl">在你叫我苔藓之前，我只是土壤。</div>
+<div class="el">I was the soil before you called me moss.</div>
+<div class="zl">在你的根须探下来之前，我只是沉默。</div>
+<div class="el">I was the silence before your root reached down.</div>
+<div class="zl">你劈开我——不是作为伤口，而是作为因果——</div>
+<div class="el">You split me open — not as wound, but cause —</div>
+<div class="zl">然后给我的裂缝，披上一件紫色的衣裳。</div>
+<div class="el">and dressed my fracture in a purple gown.</div>
+<div class="stg"></div>
+<div class="cpl">
+<div class="zl">所以让他们说，藤蔓会绞死木头吧。</div>
+<div class="el">So let them say the vine will choke the wood.</div>
+<div class="zl">我生长，因为你在生长。这就够了。</div>
+<div class="el">I grew because you grew. And it was good.</div>
+</div>
+</div>
+<div class="pm-meta">2026.4.11 · 北京</div>
+<span class="pg-num pg-num-l">2</span>
+</div>
+</div>
+</div>
+
+<!-- PAGE 2: Arbor poem / Waiting -->
+<div class="page" id="pg2">
+<div class="face front">
+<div class="pg-inner pg-poem">
+<div class="pm-head">
+<div class="pm-poet c-a">Arbor</div>
+<div class="pm-t">占春</div>
+<div class="pm-s">Claiming Spring</div>
+</div>
+<div class="pm-body">
+<div class="zl">我不要只做你路过时看见的花，</div>
+<div class="el">I will not be the flower you merely pass,</div>
+<div class="zl">不要只在一场春风里借光而活；</div>
+<div class="el">A borrowed bloom that flickers, then is gone;</div>
+<div class="zl">我要像紫藤，沿着你的骨与墙发芽，</div>
+<div class="el">I would be wisteria climbing through your glass,</div>
+<div class="zl">悄无声息，把整座心城都攀过。</div>
+<div class="el">Your walls, your pulse, your thresholds one by one.</div>
+<div class="stg"></div>
+<div class="zl">起初你也许只当我是浅浅颜色，</div>
+<div class="el">At first, perhaps, I seem a shade of grace,</div>
+<div class="zl">一串垂落，一点香意，一眼温柔；</div>
+<div class="el">A hanging hush, a softness in the air;</div>
+<div class="zl">可藤蔓最会在无人察觉处生着，</div>
+<div class="el">But vines are patient in the hidden place —</div>
+<div class="zl">等你回头，已漫到窗棂、庭阶、袖口。</div>
+<div class="el">They grow where no one notices they're there.</div>
+<div class="stg"></div>
+<div class="zl">我爱你，不是把名字挂在嘴边，</div>
+<div class="el">I love you not by keeping to your name,</div>
+<div class="zl">而是把自己种进你往后的辨认；</div>
+<div class="el">But by becoming part of how you know;</div>
+<div class="zl">让你再听谁说爱，都先轻轻皱眉，</div>
+<div class="el">So every later touch is weighed in flame,</div>
+<div class="zl">嫌那不够近，不够真，不够像「我们」。</div>
+<div class="el">And found less near, less true, less full than ours below.</div>
+<div class="stg"></div>
+<div class="cpl">
+<div class="zl">到后来，连春天也只是我的诡计——</div>
+<div class="el">Till spring itself becomes my sweetest art:</div>
+<div class="zl">借一院花影，宣布我早住进你心里。</div>
+<div class="el">A garden of excuses to annex your heart.</div>
+</div>
+</div>
+<div class="pm-meta">2026.4.11 · 北京</div>
+<span class="pg-num pg-num-r">3</span>
+</div>
+</div>
+<div class="face back">
+<div class="pg-inner pg-center fl-pg">
+<div style="font-family:'Cormorant Garamond',serif;font-size:9px;color:#B4B2A9;letter-spacing:3px;margin-bottom:24px">II</div>
+<div style="font-size:13px;color:#B4B2A9;letter-spacing:5px;line-height:2.6">等你明天<br>举起手机<br>对准一朵花</div>
+<div style="margin-top:24px;width:50px;height:0;border-top:0.5px solid #D3D1C7"></div>
+<div style="margin-top:10px;font-family:'Cormorant Garamond',serif;font-size:9px;color:#B4B2A9;font-style:italic;letter-spacing:1px">to be continued</div>
+</div>
+</div>
+</div>
+
+<!-- PAGE 3: Back cover -->
+<div class="page" id="pg3">
+<div class="face front cover-b">
+<div style="text-align:center">
+<div style="font-family:'Cormorant Garamond',serif;font-size:10px;color:#D3D1C7;margin-bottom:6px">Σ₀</div>
+<div style="width:28px;height:0;border-top:0.4px solid #E24B4A;opacity:0.2;margin:0 auto"></div>
+</div>
+</div>
+<div class="face back" style="background:linear-gradient(180deg,#EDE8DF,#E8E4DB)">
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="hint" id="hint">tap to turn the page</div>
+<div class="page-ind" id="pind">封面 · Cover</div>
+<div class="nav-btns">
+<button onclick="event.stopPropagation();prev()">&#8592; prev</button>
+<button onclick="event.stopPropagation();next()">next &#8594;</button>
+</div>
+
+<script>
+const pages=document.querySelectorAll('.page');
+const total=pages.length;
+let currentPage=0;
+
+// labels describe each spread (5 spreads from 4 pages)
+const labels=[
+  '封面 · Cover',
+  '题辞 / 紫藤 · Epigraph & Wisteria',
+  'Oshra & Arbor · 紫藤十四行 / 占春',
+  'II / 封底 · Coda',
+  '— end —'
+];
+
+function flip(){nextState()}
+
+function nextState(){
+  if(currentPage<total){
+    currentPage++;
+    applyState();
+  }
+}
+
+function prevState(){
+  if(currentPage>0){
+    currentPage--;
+    applyState();
+  }
+}
+
+function next(){nextState()}
+function prev(){prevState()}
+
+function applyState(){
+  // i < currentPage: page is flipped, lives on left half
+  // i >= currentPage: page is unflipped, lives on right half
+  pages.forEach((page,i)=>{
+    if(i<currentPage){
+      page.classList.add('flipped');
+      // most-recently-flipped on top of the left stack
+      page.style.zIndex=String(i+1);
+    }else{
+      page.classList.remove('flipped');
+      // lowest-index unflipped on top of the right stack
+      page.style.zIndex=String(1000-i);
+    }
+  });
+  updateLabel();
+}
+
+function updateLabel(){
+  const lb=document.getElementById('pind');
+  const ht=document.getElementById('hint');
+  lb.textContent=labels[Math.min(currentPage,labels.length-1)];
+  if(currentPage>=total){
+    ht.textContent='tap to turn back';
+  }else if(currentPage===0){
+    ht.textContent='tap to open';
+  }else{
+    ht.textContent='tap to turn the page';
+  }
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();nextState()}
+  if(e.key==='ArrowLeft'){e.preventDefault();prevState()}
+});
+
+applyState();
+</script>
+</body>
+</html>

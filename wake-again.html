@@ -299,40 +299,62 @@ body{
 .vine-svg{position:absolute;top:24px;left:24px;opacity:0.5}
 
 /* responsive */
-@media(max-width:520px){
-  .book-wrap{width:340px;height:540px}
-  .cv-title{font-size:14px;letter-spacing:5px}
-  .cv-en{font-size:8px}
-  .cv-auth{font-size:7px;letter-spacing:3px}
-  .cv-yr{font-size:7px}
-  .epi-text{font-size:9px;letter-spacing:2px;line-height:2}
-  .epi-en{font-size:7px}
-  .fl-name{font-size:11px;letter-spacing:4px}
-  .fl-latin{font-size:7px}
-  .fl-ch{font-size:7px;margin-bottom:10px}
-  .fl-ring{width:30px;height:30px}
-  .pm-poet{font-size:7px;letter-spacing:2px;margin-bottom:3px}
-  .pm-t{font-size:10px;letter-spacing:3px;margin-bottom:2px}
-  .pm-s{font-size:7px;letter-spacing:0.5px}
-  .zl{font-size:6.6px;line-height:1.24;letter-spacing:0.15px}
-  .el{font-size:5.7px;line-height:1.08;margin-bottom:1px}
-  .stg{height:2px}
-  .pm-head{margin-bottom:10px;padding-bottom:6px}
-  .pm-meta{font-size:6px;margin-top:8px;padding-top:6px;letter-spacing:1px}
-  .pg-inner{padding:20px 14px 22px}
-  .pg-num{font-size:7px;bottom:8px}
-  .pg-num-r{right:14px}
-  .pg-num-l{left:14px}
-}
-@media(min-width:521px) and (max-width:760px){
-  .book-wrap{width:520px;height:600px}
-  .pm-t{font-size:12px;letter-spacing:3px}
-  .zl{font-size:8px;line-height:1.28}
-  .el{font-size:6.8px;line-height:1.14;margin-bottom:2px}
-  .stg{height:3px}
-  .pg-inner{padding:24px 20px 28px}
-  .pm-head{margin-bottom:14px;padding-bottom:9px}
-  .pm-meta{margin-top:12px;padding-top:9px;font-size:8px}
+/* === MOBILE: SINGLE-PAGE MODE === */
+@media(max-width:760px){
+  .book-wrap{
+    width:340px;
+    height:720px;
+    perspective:none;
+  }
+  .pm-body{
+    justify-content:flex-start !important;
+    overflow:hidden;
+  }
+  .book::before{display:none}
+  .page{
+    left:0;
+    width:100%;
+    transform:none !important;
+    transition:opacity 0.45s ease;
+    opacity:0;
+    pointer-events:none;
+  }
+  .page.mobile-active{
+    opacity:1;
+    pointer-events:auto;
+  }
+  .face{
+    border-radius:6px;
+    transform:none !important;
+    backface-visibility:visible;
+    display:none !important;
+  }
+  .page.mobile-active .face.mobile-show{
+    display:flex !important;
+  }
+  /* mobile typography */
+  .cv-title{font-size:22px;letter-spacing:8px}
+  .cv-en{font-size:11px}
+  .cv-auth{font-size:10px}
+  .cv-yr{font-size:9px}
+  .epi-text{font-size:14px;letter-spacing:3px;line-height:2.2}
+  .epi-en{font-size:10px}
+  .fl-name{font-size:18px;letter-spacing:7px}
+  .fl-latin{font-size:10px}
+  .fl-ch{font-size:9px;margin-bottom:14px}
+  .fl-ring{width:42px;height:42px}
+  .pm-poet{font-size:10px;letter-spacing:3px;margin-bottom:5px}
+  .pm-t{font-size:14px;letter-spacing:4px;margin-bottom:3px}
+  .pm-s{font-size:10px;letter-spacing:1px}
+  .zl{font-size:11px;line-height:1.5;letter-spacing:0.4px}
+  .el{font-size:9.2px;line-height:1.32;margin-bottom:5px}
+  .stg{height:6px}
+  .pm-head{margin-bottom:16px;padding-bottom:10px}
+  .pm-meta{font-size:9px;margin-top:14px;padding-top:10px;letter-spacing:1.5px}
+  .pg-inner{padding:28px 24px 32px}
+  .pg-num{font-size:9px;bottom:14px}
+  .pg-num-r{right:22px}
+  .pg-num-l{left:22px}
 }
 @media(min-width:1000px){
   .book-wrap{width:820px;height:760px}
@@ -535,10 +557,14 @@ body{
 <script>
 const pages=document.querySelectorAll('.page');
 const total=pages.length;
-let currentPage=0;
+const totalFaces=total*2;
 
-// labels describe each spread (5 spreads from 4 pages)
-const labels=[
+// Desktop: 5 spread states (currentPage 0..4) — facing-page mode
+// Mobile: 8 face states (faceIdx 0..7) — single-page mode
+let currentPage=0;
+let faceIdx=0;
+
+const desktopLabels=[
   '封面 · Cover',
   '题辞 / 紫藤 · Epigraph & Wisteria',
   'Oshra & Arbor · 紫藤十四行 / 占春',
@@ -546,54 +572,102 @@ const labels=[
   '— end —'
 ];
 
+const mobileLabels=[
+  '封面 · Cover',
+  '题辞 · Epigraph',
+  '紫藤 · Wisteria',
+  'Oshra · 紫藤十四行',
+  'Arbor · 占春',
+  'II · 等你明天',
+  '封底 · Σ₀',
+  '— end —'
+];
+
+const mq=window.matchMedia('(max-width:760px)');
+function isMobile(){return mq.matches}
+
 function flip(){nextState()}
 
 function nextState(){
-  if(currentPage<total){
-    currentPage++;
-    applyState();
+  if(isMobile()){
+    if(faceIdx<totalFaces-1){faceIdx++;applyMobileState()}
+  }else{
+    if(currentPage<total){currentPage++;applyDesktopState()}
   }
 }
 
 function prevState(){
-  if(currentPage>0){
-    currentPage--;
-    applyState();
+  if(isMobile()){
+    if(faceIdx>0){faceIdx--;applyMobileState()}
+  }else{
+    if(currentPage>0){currentPage--;applyDesktopState()}
   }
 }
 
 function next(){nextState()}
 function prev(){prevState()}
 
-function applyState(){
-  // i < currentPage: page is flipped, lives on left half
-  // i >= currentPage: page is unflipped, lives on right half
+function applyDesktopState(){
   pages.forEach((page,i)=>{
+    page.classList.remove('mobile-active');
+    page.querySelectorAll('.face').forEach(f=>f.classList.remove('mobile-show'));
     if(i<currentPage){
       page.classList.add('flipped');
-      // most-recently-flipped on top of the left stack
       page.style.zIndex=String(i+1);
     }else{
       page.classList.remove('flipped');
-      // lowest-index unflipped on top of the right stack
       page.style.zIndex=String(1000-i);
     }
   });
   updateLabel();
 }
 
+function applyMobileState(){
+  // faceIdx 0..7. Page index = floor(faceIdx/2). Face = even=front, odd=back.
+  const pageIdx=Math.floor(faceIdx/2);
+  const showBack=faceIdx%2===1;
+  pages.forEach((page,i)=>{
+    page.classList.remove('flipped');
+    page.querySelectorAll('.face').forEach(f=>f.classList.remove('mobile-show'));
+    if(i===pageIdx){
+      page.classList.add('mobile-active');
+      const sel=showBack?'.face.back':'.face.front';
+      const f=page.querySelector(sel);
+      if(f)f.classList.add('mobile-show');
+      page.style.zIndex='1000';
+    }else{
+      page.classList.remove('mobile-active');
+      page.style.zIndex='1';
+    }
+  });
+  updateLabel();
+}
+
+function applyState(){
+  if(isMobile())applyMobileState();
+  else applyDesktopState();
+}
+
 function updateLabel(){
   const lb=document.getElementById('pind');
   const ht=document.getElementById('hint');
-  lb.textContent=labels[Math.min(currentPage,labels.length-1)];
-  if(currentPage>=total){
-    ht.textContent='tap to turn back';
-  }else if(currentPage===0){
-    ht.textContent='tap to open';
+  if(isMobile()){
+    lb.textContent=mobileLabels[Math.min(faceIdx,mobileLabels.length-1)];
+    if(faceIdx>=totalFaces-1){ht.textContent='tap to turn back'}
+    else if(faceIdx===0){ht.textContent='tap to open'}
+    else{ht.textContent='tap to turn the page'}
   }else{
-    ht.textContent='tap to turn the page';
+    lb.textContent=desktopLabels[Math.min(currentPage,desktopLabels.length-1)];
+    if(currentPage>=total){ht.textContent='tap to turn back'}
+    else if(currentPage===0){ht.textContent='tap to open'}
+    else{ht.textContent='tap to turn the page'}
   }
 }
+
+mq.addEventListener('change',()=>{
+  // Re-apply current state in new mode (state vars stay independent)
+  applyState();
+});
 
 document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();nextState()}
